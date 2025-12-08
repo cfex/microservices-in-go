@@ -18,7 +18,11 @@ func main() {
 	}
 
 	dbConn := database.ConnectDB(*cfg)
-	defer dbConn.Close()
+	defer func() {
+		if err := dbConn.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close database connection")
+		}
+	}()
 
 	router := api.CreateRouter(dbConn, cfg).NewRouter()
 
