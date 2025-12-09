@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=hubdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  user-service:
+    build:
+      context: ./users-service
+      dockerfile: Dockerfile
+      target: dev
+    command: ["air", "-c", ".air.toml"]
+    volumes:
+      - ./users-service:/app
+    ports:
+      - "5001:5000"
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=admin
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=hubdb
+    depends_on:
+      - postgres
+    restart: on-failure
+volumes:
+  postgres-data:
