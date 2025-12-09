@@ -13,7 +13,7 @@ import (
 )
 
 type Service interface {
-	CreateUser(ctx context.Context, req *dtos.CreateUserRequest) (*dtos.UserCreateReponse, *models.ErrorResponse)
+	CreateUser(ctx context.Context, req *dtos.CreateUserRequest) (*dtos.UserCreateResponse, *models.ErrorResponse)
 }
 
 type svc struct {
@@ -24,8 +24,8 @@ func NewService(repo *repositories.User) Service {
 	return &svc{repo: repo}
 }
 
-func (s *svc) CreateUser(ctx context.Context, req *dtos.CreateUserRequest) (*dtos.UserCreateReponse, *models.ErrorResponse) {
-	response := &dtos.UserCreateReponse{}
+func (s *svc) CreateUser(ctx context.Context, req *dtos.CreateUserRequest) (*dtos.UserCreateResponse, *models.ErrorResponse) {
+	response := &dtos.UserCreateResponse{}
 	existingUser, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, &models.ErrorResponse{
