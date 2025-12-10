@@ -4,6 +4,7 @@ import (
 	api "github.com/cfex/microservices-in-go/users-service/cmd"
 	"github.com/cfex/microservices-in-go/users-service/cmd/config"
 	"github.com/cfex/microservices-in-go/users-service/internal/database"
+	"github.com/cfex/microservices-in-go/users-service/internal/jwt"
 	"github.com/cfex/microservices-in-go/users-service/internal/logger"
 	"github.com/cfex/microservices-in-go/users-service/server"
 )
@@ -23,6 +24,8 @@ func main() {
 			log.Error().Err(err).Msg("Failed to close database connection")
 		}
 	}()
+
+	jwt.NewJwt(cfg)
 
 	router := api.CreateRouter(dbConn, cfg).NewRouter()
 
