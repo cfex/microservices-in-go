@@ -16,6 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -o users-service .
 # Dev stage with hot reload (Air)
 FROM golang:1.25.4-alpine AS dev
 WORKDIR /app
+ENV TZ=Europe/Belgrade
 # Air module path has moved to github.com/air-verse/air
 RUN apk add --no-cache git && go install github.com/air-verse/air@latest
 COPY . .
@@ -29,6 +30,8 @@ RUN apk --no-cache add ca-certificates wget
 WORKDIR /app
 
 COPY --from=builder /app/users-service .
+ENV TZ=Europe/Belgrade
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 EXPOSE 5000
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cfex/microservices-in-go/users-service/internal/handlers"
+	"github.com/cfex/microservices-in-go/users-service/internal/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,10 +13,24 @@ func RegisterPublicRoutes(rg *gin.RouterGroup) {
 		c.JSON(http.StatusOK, gin.H{"message": "Users service is healthy"})
 	})
 }
-
-func RegisterPublicUserRoutes(rg *gin.RouterGroup, h *handlers.Handler) {
-	rg.GET("/:id", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Get user by ID endpoint"})
+func RegisterPublicUserRoutes(rg *gin.RouterGroup) {
+	rg.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "Public Users Endpoint"})
 	})
-	rg.POST("/", h.CreateUser)
+}
+
+func RegisterPublicAuthRoutes(rg *gin.RouterGroup, h *handlers.AuthHandler) {
+	rg.POST("/login", h.Login)
+	rg.POST("/register", h.RegisterUser)
+}
+
+func RegisterProtectedAuthRoutes(rg *gin.RouterGroup, h *handlers.AuthHandler) {
+	rg.Use(middlewares.RequireAuthentication)
+	rg.GET("/me", h.GetMe)
+	rg.POST("/logout", h.Logout)
+}
+
+func RegisterProtectedUserRoutes(rg *gin.RouterGroup, h *handlers.UserHandler) {
+	rg.Use(middlewares.RequireAuthentication)
+	rg.GET("/:id", h.GetUserByID)
 }

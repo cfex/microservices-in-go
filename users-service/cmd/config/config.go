@@ -12,14 +12,17 @@ import (
 )
 
 type JwtConfig struct {
-	SecretKey string
-	TTL       time.Duration
+	SecretKey        string
+	TTL              time.Duration
+	RefreshSecretKey string
+	RefreshTTL       time.Duration
 }
 
 type ServerConfig struct {
-	Port string
-	Env  string
-	Cors cors.Config
+	Port   string
+	Env    string
+	Cors   cors.Config
+	Domain string
 }
 
 type DatabaseConfig struct {
@@ -77,6 +80,7 @@ func Load() (*Config, error) {
 				AllowCredentials: true,
 				MaxAge:           12 * time.Hour,
 			},
+			Domain: env.GetEnv("DOMAIN"),
 		},
 		Jwt: JwtConfig{SecretKey: env.GetEnv("SECRET_KEY"), TTL: jwtTTL},
 		Database: DatabaseConfig{
