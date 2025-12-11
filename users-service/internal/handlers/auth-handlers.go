@@ -13,10 +13,10 @@ import (
 
 type AuthHandler struct {
 	service services.AuthService
-	cfg     *config.ServerConfig
+	cfg     *config.Config
 }
 
-func NewAuthHandler(service services.AuthService, cfg *config.ServerConfig) *AuthHandler {
+func NewAuthHandler(service services.AuthService, cfg *config.Config) *AuthHandler {
 	return &AuthHandler{service: service, cfg: cfg}
 }
 
@@ -58,14 +58,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("access_token", res.AccessToken, 3600, "/", h.cfg.Domain, false, true)
-	c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", h.cfg.Domain, false, true)
+	c.SetCookie("access_token", res.AccessToken, 3600, "/", h.cfg.Server.Domain, false, true)
+	c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", h.cfg.Server.Domain, false, true)
 	c.JSON(http.StatusOK, res)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", h.cfg.Domain, false, true)
-	c.SetCookie("refresh_token", "", -1, "/", h.cfg.Domain, false, true)
+	c.SetCookie("access_token", "", -1, "/", h.cfg.Server.Domain, false, true)
+	c.SetCookie("refresh_token", "", -1, "/", h.cfg.Server.Domain, false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 

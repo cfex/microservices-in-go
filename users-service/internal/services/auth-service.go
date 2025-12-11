@@ -29,7 +29,7 @@ func NewAuthService(repo *repositories.User) AuthService {
 
 func (s *authSvc) Register(ctx context.Context, req *dtos.RegisterRequest) (*dtos.AccountResponse, *models.ErrorResponse) {
 	response := &dtos.AccountResponse{}
-	existingUser, err := s.repo.GetByEmail(ctx, req.Email)
+	existingEmail, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, &models.ErrorResponse{
 			Code:    http.StatusInternalServerError,
@@ -37,9 +37,17 @@ func (s *authSvc) Register(ctx context.Context, req *dtos.RegisterRequest) (*dto
 		}
 	}
 
-	if existingUser != nil {
+	existingUsername, err := s.repo.GetByUsername(ctx, req.Username)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, &models.ErrorResponse{
-			Code:    http.StatusBadRequest,
+			Code:    http.StatusInternalServerError,
+			Message: "Internal Server Error",
+		}
+	}
+
+	if existingUsername != nil || existingEmail != nil {
+		return nil, &models.ErrorResponse{
+			Code:    http.StatusConflict,
 			Message: "User already exists",
 			Err:     err,
 		}
@@ -55,13 +63,6 @@ func (s *authSvc) Register(ctx context.Context, req *dtos.RegisterRequest) (*dto
 	}
 
 	usr := req.ToEntity(string(hashedPassword))
-	if usr == nil {
-		return nil, &models.ErrorResponse{
-			Code:    http.StatusInternalServerError,
-			Message: "User conversion failed",
-		}
-	}
-
 	err = s.repo.Create(ctx, usr)
 	if err != nil {
 		return nil, &models.ErrorResponse{

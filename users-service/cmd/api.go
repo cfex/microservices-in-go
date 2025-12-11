@@ -13,16 +13,16 @@ import (
 
 type router struct {
 	DB  *sql.DB
-	cfg *config.ServerConfig
+	cfg *config.Config
 }
 
 func CreateRouter(db *sql.DB, cfg *config.Config) *router {
-	return &router{DB: db, cfg: &cfg.Server}
+	return &router{DB: db, cfg: cfg}
 }
 
 func (r *router) NewRouter() *gin.Engine {
 	ro := gin.Default()
-	ro.Use(cors.New(r.cfg.Cors))
+	ro.Use(cors.New(r.cfg.Server.Cors))
 
 	ur := repositories.NewUserRepository(r.DB)
 	as := services.NewAuthService(ur)

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	api "github.com/cfex/microservices-in-go/users-service/cmd"
 	"github.com/cfex/microservices-in-go/users-service/cmd/config"
 	"github.com/cfex/microservices-in-go/users-service/internal/database"
@@ -10,7 +12,11 @@ import (
 )
 
 func main() {
-
+	loc, err := time.LoadLocation("Europe/Belgrade")
+	if err != nil {
+		panic(err)
+	}
+	time.Local = loc
 	log := logger.GetLogger()
 
 	cfg, err := config.Load()

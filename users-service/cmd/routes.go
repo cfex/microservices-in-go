@@ -22,12 +22,12 @@ func RegisterPublicUserRoutes(rg *gin.RouterGroup) {
 func RegisterPublicAuthRoutes(rg *gin.RouterGroup, h *handlers.AuthHandler) {
 	rg.POST("/login", h.Login)
 	rg.POST("/register", h.RegisterUser)
-	rg.POST("/logout", h.Logout)
 }
 
 func RegisterProtectedAuthRoutes(rg *gin.RouterGroup, h *handlers.AuthHandler) {
 	rg.Use(middlewares.RequireAuthentication)
-	rg.POST("/me", h.GetMe)
+	rg.GET("/me", h.GetMe)
+	rg.POST("/logout", h.Logout)
 }
 
 func RegisterProtectedUserRoutes(rg *gin.RouterGroup, h *handlers.UserHandler) {

@@ -11,14 +11,14 @@ type AccountResponse struct {
 }
 
 type RegisterRequest struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	Password string `json:"password" binding:"required,min=8,max=72"`
+	Username string `json:"username" binding:"required,min=3,max=50,alphanum"`
+	Email    string `json:"email" binding:"required,email,max=254"`
 }
 
 type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type LoginResponse struct {
