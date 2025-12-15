@@ -49,8 +49,7 @@ func (r *User) Create(ctx context.Context, user *models.User) error {
         INSERT INTO users (username, email, password, role, created_at) 
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) 
     `
-
-	id, err := r.Insert(query, user.Username, user.Email, user.Role, user.Password)
+	id, err := r.Insert(query, user.Username, user.Email, user.Password, user.Role)
 	user.ID = id
 
 	return err

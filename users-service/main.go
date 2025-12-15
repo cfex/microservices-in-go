@@ -17,6 +17,7 @@ func main() {
 		panic(err)
 	}
 	time.Local = loc
+	logger.Init()
 	log := logger.GetLogger()
 
 	cfg, err := config.Load()
