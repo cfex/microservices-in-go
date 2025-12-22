@@ -33,25 +33,25 @@ func mapRows(rows *sql.Rows, u *models.User) error {
 func (r *User) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users WHERE username = $1`
 
-	return r.SelectSingle(mapRow, query, username)
+	return r.SelectSingleWithContext(ctx, mapRow, query, username)
 }
 
 func (r *User) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users WHERE email = $1`
 
-	return r.SelectSingle(mapRow, query, email)
+	return r.SelectSingleWithContext(ctx, mapRow, query, email)
 }
 
 func (r *User) GetByID(ctx context.Context, id string) (*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users WHERE id = $1`
 
-	return r.SelectSingle(mapRow, query, id)
+	return r.SelectSingleWithContext(ctx, mapRow, query, id)
 }
 
 func (r *User) GetAll(ctx context.Context) ([]*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users LIMIT 1000`
 
-	return r.SelectMultiple(mapRows, query)
+	return r.SelectMultipleWithContext(ctx, mapRows, query)
 }
 
 func (r *User) Create(ctx context.Context, user *models.User) error {
@@ -59,7 +59,7 @@ func (r *User) Create(ctx context.Context, user *models.User) error {
         INSERT INTO users (username, email, password, role, created_at) 
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) 
     `
-	id, err := r.Insert(query, user.Username, user.Email, user.Password, user.Role)
+	id, err := r.Insert(ctx, query, user.Username, user.Email, user.Password, user.Role)
 	user.ID = id
 
 	return err

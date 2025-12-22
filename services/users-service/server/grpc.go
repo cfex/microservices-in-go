@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
-	"github.com/cfex/microservices-in-go/services/users-service/internal/handlers"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/logger"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/repositories"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/transport"
@@ -52,7 +51,7 @@ func (s *GRPCServer) Run() error {
 
 	ur := repositories.NewUserRepository(s.db)
 	svc := transport.NewUsrGrpcSvc(ur)
-	handlers.NewGRPCHandler(s.server, svc)
+	transport.NewGRPCHandler(s.server, svc)
 
 	reflection.Register(s.server)
 

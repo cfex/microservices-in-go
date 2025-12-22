@@ -70,10 +70,36 @@ func (repo *BaseSqlRepository[T]) SelectSingleWithContext(ctx context.Context, m
 	return &t, nil
 }
 
-func (repo *BaseSqlRepository[T]) Insert(query string, args ...any) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+func (repo *BaseSqlRepository[T]) SelectMultipleWithContext(ctx context.Context, mapRow func(*sql.Rows, *T) error, query string, args ...any) ([]*T, error) {
+	rows, err := repo.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
 
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}(rows)
+
+	var list []*T
+
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		var t T
+		if err := mapRow(rows, &t); err != nil {
+			return nil, err
+		}
+		list = append(list, &t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (repo *BaseSqlRepository[T]) Insert(ctx context.Context, query string, args ...any) (string, error) {
 	var id string
 	query = query + " RETURNING id"
 

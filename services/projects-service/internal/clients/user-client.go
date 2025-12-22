@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cfex/microservices-in-go/services/common/genproto"
+	"github.com/cfex/microservices-in-go/services/common/pb"
 	"github.com/cfex/microservices-in-go/services/projects-service/cmd/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,7 +14,7 @@ import (
 
 type UserClient struct {
 	conn   *grpc.ClientConn
-	client genproto.UserServiceClient
+	client pb.UserServiceClient
 }
 
 func NewUserClient(cfg *config.Config) (*UserClient, error) {
@@ -23,7 +23,7 @@ func NewUserClient(cfg *config.Config) (*UserClient, error) {
 		log.Fatal("cannot dial server: ", err)
 	}
 
-	return &UserClient{conn: conn, client: genproto.NewUserServiceClient(conn)}, nil
+	return &UserClient{conn: conn, client: pb.NewUserServiceClient(conn)}, nil
 }
 
 func (c *UserClient) Close() error {
@@ -37,7 +37,7 @@ func (c *UserClient) GetUserById(ctx context.Context, userId string) (string, er
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	res, err := c.client.GetUserById(ctx, &genproto.GetUserRequest{ID: userId})
+	res, err := c.client.GetUserById(ctx, &pb.GetUserRequest{ID: userId})
 	if err != nil {
 		return "", fmt.Errorf("failed to get user by id: %w", err)
 	}

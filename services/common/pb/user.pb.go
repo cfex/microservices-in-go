@@ -4,7 +4,7 @@
 // 	protoc        v6.33.2
 // source: user.proto
 
-package genproto
+package pb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -147,7 +147,7 @@ const file_user_proto_rawDesc = "" +
 	"\x05Email\x18\x03 \x01(\tR\x05Email\x12\x12\n" +
 	"\x04Role\x18\x04 \x01(\tR\x04Role2>\n" +
 	"\vUserService\x12/\n" +
-	"\vGetUserById\x12\x0f.GetUserRequest\x1a\r.UserResponse\"\x00BGZEgithub.com/cfex/microservices-in-go/services/common/genproto;genprotob\x06proto3"
+	"\vGetUserById\x12\x0f.GetUserRequest\x1a\r.UserResponse\"\x00B;Z9github.com/cfex/microservices-in-go/services/common/pb;pbb\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
