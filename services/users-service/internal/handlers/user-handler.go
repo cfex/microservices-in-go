@@ -29,3 +29,16 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, usr)
 }
+
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	log := logger.GetLogger()
+
+	rep, err := h.service.GetAllUsers(c)
+	if err != nil {
+		log.Error().Err(err.Err).Msg(err.Message)
+		c.JSON(err.Code, gin.H{"error": err.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, rep)
+}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
+	_ "github.com/lib/pq"
 )
 
 var ErrDatabaseRefuseConnection = errors.New("database refused connection")

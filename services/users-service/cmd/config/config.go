@@ -19,10 +19,11 @@ type JwtConfig struct {
 }
 
 type ServerConfig struct {
-	Port   string
-	Env    string
-	Cors   cors.Config
-	Domain string
+	Port     string
+	Env      string
+	Cors     cors.Config
+	Domain   string
+	GRPCPort string
 }
 
 type DatabaseConfig struct {
@@ -80,7 +81,8 @@ func Load() (*Config, error) {
 				AllowCredentials: true,
 				MaxAge:           12 * time.Hour,
 			},
-			Domain: env.GetEnv("DOMAIN"),
+			Domain:   env.GetEnv("DOMAIN"),
+			GRPCPort: env.GetEnv("GRPC_PORT"),
 		},
 		Jwt: JwtConfig{SecretKey: env.GetEnv("SECRET_KEY"), TTL: jwtTTL},
 		Database: DatabaseConfig{

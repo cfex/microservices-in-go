@@ -58,6 +58,18 @@ func (repo *BaseSqlRepository[T]) SelectSingle(mapRow func(*sql.Row, *T) error, 
 	return &t, nil
 }
 
+func (repo *BaseSqlRepository[T]) SelectSingleWithContext(ctx context.Context, mapRow func(*sql.Row, *T) error, query string, args ...any) (*T, error) {
+	row := repo.DB.QueryRowContext(ctx, query, args...)
+	var t T
+	if err := mapRow(row, &t); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+	return &t, nil
+}
+
 func (repo *BaseSqlRepository[T]) Insert(query string, args ...any) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

@@ -4,25 +4,28 @@ import (
 	"context"
 
 	"github.com/cfex/microservices-in-go/services/common/genproto"
-	"github.com/cfex/microservices-in-go/services/users-service/internal/services"
+	"github.com/cfex/microservices-in-go/services/users-service/internal/repositories"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type grpcSvc struct {
-	genproto.UnimplementedUserServiceServer
-	svc services.UserService
+type GrpcService interface {
+	GetUserById(context.Context, *genproto.GetUserRequest) (*genproto.UserResponse, error)
 }
 
-func NewGrpcSvc(svc services.UserService) *grpcSvc {
-	return &grpcSvc{svc: svc}
+type grpcSvc struct {
+	repo *repositories.User
+	genproto.UnimplementedUserServiceServer
+}
+
+func NewUsrGrpcSvc(repo *repositories.User) GrpcService {
+	return &grpcSvc{repo: repo}
 }
 
 func (s *grpcSvc) GetUserById(ctx context.Context, req *genproto.GetUserRequest) (*genproto.UserResponse, error) {
-
-	dto, err := s.svc.GetByID(ctx, req.ID)
+	dto, err := s.repo.GetByID(ctx, req.ID)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Message)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &genproto.UserResponse{
@@ -31,5 +34,4 @@ func (s *grpcSvc) GetUserById(ctx context.Context, req *genproto.GetUserRequest)
 		Email:    dto.Email,
 		Role:     dto.Role,
 	}, nil
-
 }

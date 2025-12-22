@@ -6,7 +6,6 @@ import (
 	api "github.com/cfex/microservices-in-go/services/users-service/cmd"
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/database"
-	"github.com/cfex/microservices-in-go/services/users-service/internal/env"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/jwt"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/logger"
 	"github.com/cfex/microservices-in-go/services/users-service/server"
@@ -37,8 +36,11 @@ func main() {
 
 	router := api.CreateRouter(dbConn, cfg).NewRouter()
 
-	grpcServer := server.NewGRPCServer(env.GetEnv("USR_GRPC_ADDR"))
-	grpcServer.Run()
+	go func() {
+		if err := server.NewGRPCServer(dbConn, cfg).Run(); err != nil {
+			log.Fatal().Err(err).Msg("gRPC server failed")
+		}
+	}()
 
 	server.NewServer(log, router, cfg).Serve()
 }

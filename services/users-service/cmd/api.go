@@ -35,7 +35,7 @@ func (r *router) NewRouter() *gin.Engine {
 	ag := ro.Group("/api/auth")
 
 	RegisterPublicRoutes(prg)
-	RegisterPublicUserRoutes(rg)
+	RegisterPublicUserRoutes(rg, uh)
 	RegisterPublicAuthRoutes(ag, ah)
 	RegisterProtectedAuthRoutes(ag, ah)
 	RegisterProtectedUserRoutes(rg, uh)

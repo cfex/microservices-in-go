@@ -1,43 +1,22 @@
 # Build stage
-FROM golang:1.25.4-alpine AS builder
-
+FROM golang:1.25.5-alpine AS builder
 WORKDIR /app
-
 RUN apk add --no-cache git
-
 COPY go.mod go.sum ./
-
 RUN go mod download
-
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o /app/services/users-service/tmp/users-service ./services/users-service
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o users-service .
+FROM alpine:3.19 AS runtime
+WORKDIR /app/services/users-service
+COPY --from=builder /app/services/users-service/tmp/users-service ./tmp/users-service
+EXPOSE 5000 50051
+ENTRYPOINT ["./tmp/users-service"]
 
-# Dev stage with hot reload (Air)
-FROM golang:1.25.4-alpine AS dev
+FROM golang:1.25.5-alpine AS dev
 WORKDIR /app
 ENV TZ=Europe/Belgrade
-# Air module path has moved to github.com/air-verse/air
 RUN apk add --no-cache git && go install github.com/air-verse/air@latest
 COPY . .
-CMD ["air", "-c", ".air.toml"]
-
-# Prod stage
-FROM alpine:latest AS prod
-
-RUN apk --no-cache add ca-certificates wget
-
-WORKDIR /app
-
-COPY --from=builder /app/users-service .
-ENV TZ=Europe/Belgrade
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-EXPOSE 5000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
-
-# Run the application
-CMD ["./users-service"]
+EXPOSE 5000 50051
+CMD ["air", "-c", "./services/users-service/.air.toml"]

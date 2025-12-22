@@ -19,6 +19,7 @@ type ProjectResponse struct {
 
 type ProjectCreateRequest struct {
 	Title       string `json:"title" binding:"required,min=10,max=244"`
+	UserId      string `json:"user_id" binding:"required"`
 	Description string `json:"description" binding:"required,min=1,max=500"`
 	RepoUrl     string `json:"repo_url" binding:"required"`
 	Status      string `json:"status" bindng:"required"`
@@ -46,5 +47,15 @@ func (pr *ProjectResponse) FromEntity(p *models.Project) *ProjectResponse {
 		Status:      p.Status,
 		CreatedAt:   p.CreatedAt,
 		UpdatedAt:   p.UpdatedAt,
+	}
+}
+
+func (pcr *ProjectCreateRequest) ToEntity() *models.Project {
+	return &models.Project{
+		UserId:      pcr.UserId,
+		Title:       pcr.Title,
+		Descritpion: pcr.Description,
+		RepoUrl:     pcr.RepoUrl,
+		Status:      pcr.Status,
 	}
 }

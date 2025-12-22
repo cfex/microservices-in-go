@@ -22,26 +22,36 @@ func NewUserRepository(db *sql.DB) *User {
 	}
 }
 
-func mapRowToUser(row *sql.Row, u *models.User) error {
+func mapRow(row *sql.Row, u *models.User) error {
 	return row.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.CreatedAt)
+}
+
+func mapRows(rows *sql.Rows, u *models.User) error {
+	return rows.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.Role, &u.CreatedAt)
 }
 
 func (r *User) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users WHERE username = $1`
 
-	return r.SelectSingle(mapRowToUser, query, username)
+	return r.SelectSingle(mapRow, query, username)
 }
 
 func (r *User) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users WHERE email = $1`
 
-	return r.SelectSingle(mapRowToUser, query, email)
+	return r.SelectSingle(mapRow, query, email)
 }
 
 func (r *User) GetByID(ctx context.Context, id string) (*models.User, error) {
 	query := `SELECT id, username, email, password, role, created_at FROM users WHERE id = $1`
 
-	return r.SelectSingle(mapRowToUser, query, id)
+	return r.SelectSingle(mapRow, query, id)
+}
+
+func (r *User) GetAll(ctx context.Context) ([]*models.User, error) {
+	query := `SELECT id, username, email, password, role, created_at FROM users LIMIT 1000`
+
+	return r.SelectMultiple(mapRows, query)
 }
 
 func (r *User) Create(ctx context.Context, user *models.User) error {

@@ -35,3 +35,12 @@ func (r *Project) GetProjects(ctx context.Context) ([]*models.Project, error) {
 
 	return r.SelectMultiple(mapRows, query)
 }
+
+func (r *Project) CreateProject(ctx context.Context, project *models.Project) error {
+	query := `INSERT INTO projects(user_id, title, description, repo_url, status, created_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`
+
+	id, err := r.Insert(query, project.UserId, project.Title, project.Descritpion, project.RepoUrl, project.Status)
+	project.ID = id
+
+	return err
+}

@@ -1,41 +1,22 @@
 # Build stage
 FROM golang:1.25.5-alpine AS builder
-
 WORKDIR /app
-
 RUN apk add --no-cache git
-
 COPY go.mod go.sum ./
-
 RUN go mod download
-
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o /app/services/projects-service/tmp/projects-service ./services/projects-service
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o projects-service .
+FROM alpine:3.19 AS runtime
+WORKDIR /app/services/projects-service
+COPY --from=builder /app/services/projects-service/tmp/projects-service ./tmp/projects-service
+EXPOSE 5000 50051
+ENTRYPOINT ["./tmp/projects-service"]
 
-# Dev stage with hot reload (Air)
 FROM golang:1.25.5-alpine AS dev
 WORKDIR /app
-# Air module path has moved to github.com/air-verse/air
+ENV TZ=Europe/Belgrade
 RUN apk add --no-cache git && go install github.com/air-verse/air@latest
 COPY . .
-RUN mkdir -p ./tmp
-CMD ["air", "-c", ".air.toml"]
-
-# Prod stage
-FROM alpine:latest AS prod
-
-RUN apk --no-cache add ca-certificates wget
-
-WORKDIR /app
-
-COPY --from=builder /app/projects-service .
-
-EXPOSE 5000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
-
-# Run the application
-CMD ["./projects-service"]
+EXPOSE 5000 50051
+CMD ["air", "-c", "./services/projects-service/.air.toml"]

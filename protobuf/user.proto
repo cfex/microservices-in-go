@@ -5,7 +5,6 @@ option go_package = "github.com/cfex/microservices-in-go/services/common/genprot
 
 service UserService { 
   rpc GetUserById(GetUserRequest) returns (UserResponse) {}
-  rpc AuthenticateRequest(TokenRequest) returns (TokenResponse) {}
 }
 
 message GetUserRequest {
@@ -16,9 +15,4 @@ message UserResponse {
   string Username = 2;
   string Email = 3;
   string Role = 4;
-}
-message TokenRequest { string token = 1; }
-message TokenResponse { 
-  string ID = 1;
-  string Role = 2;
 }

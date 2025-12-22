@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -12,10 +11,11 @@ import (
 )
 
 type ServerConfig struct {
-	Port   string
-	Env    string
-	Cors   cors.Config
-	Domain string
+	Port        string
+	Env         string
+	Cors        cors.Config
+	Domain      string
+	UsrGrpcPort string
 }
 
 type DatabaseConfig struct {
@@ -38,7 +38,7 @@ type Config struct {
 
 func Load() (*Config, error) {
 	if err := godotenv.Load(".env"); err != nil {
-		return nil, fmt.Errorf("cannot load .env file: %w", err)
+		log.Warn().Err(err).Msg(".env not found, falling back to environment variables")
 	}
 
 	p, err := strconv.Atoi(env.GetEnv("DB_PORT"))
@@ -69,7 +69,8 @@ func Load() (*Config, error) {
 				AllowCredentials: true,
 				MaxAge:           12 * time.Hour,
 			},
-			Domain: env.GetEnv("DOMAIN"),
+			Domain:      env.GetEnv("DOMAIN"),
+			UsrGrpcPort: env.GetEnv("USERS_GRPC_ADDR"),
 		},
 	}, nil
 }

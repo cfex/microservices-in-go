@@ -13,10 +13,8 @@ func RegisterPublicRoutes(rg *gin.RouterGroup) {
 		c.JSON(http.StatusOK, gin.H{"message": "Users service is healthy"})
 	})
 }
-func RegisterPublicUserRoutes(rg *gin.RouterGroup) {
-	rg.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Public Users Endpoint"})
-	})
+func RegisterPublicUserRoutes(rg *gin.RouterGroup, h *handlers.UserHandler) {
+	rg.GET("/", h.GetAllUsers)
 }
 
 func RegisterPublicAuthRoutes(rg *gin.RouterGroup, h *handlers.AuthHandler) {

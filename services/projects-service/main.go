@@ -3,6 +3,7 @@ package main
 import (
 	api "github.com/cfex/microservices-in-go/services/projects-service/cmd"
 	"github.com/cfex/microservices-in-go/services/projects-service/cmd/config"
+	"github.com/cfex/microservices-in-go/services/projects-service/internal/clients"
 	"github.com/cfex/microservices-in-go/services/projects-service/internal/database"
 	"github.com/cfex/microservices-in-go/services/projects-service/internal/logger"
 	"github.com/cfex/microservices-in-go/services/projects-service/server"
@@ -25,7 +26,12 @@ func main() {
 		}
 	}()
 
-	router := api.CreateRouter(dbConn, cfg).NewRouter()
+	cl, err := clients.NewUserClient(cfg)
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+
+	router := api.CreateRouter(dbConn, cfg, cl).NewRouter()
 
 	server.NewServer(log, router, cfg).Serve()
 }

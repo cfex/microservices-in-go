@@ -8,6 +8,7 @@ package genproto
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,8 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUserById_FullMethodName         = "/UserService/GetUserById"
-	UserService_AuthenticateRequest_FullMethodName = "/UserService/AuthenticateRequest"
+	UserService_GetUserById_FullMethodName = "/UserService/GetUserById"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -28,7 +28,6 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	GetUserById(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserResponse, error)
-	AuthenticateRequest(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*TokenResponse, error)
 }
 
 type userServiceClient struct {
@@ -49,22 +48,11 @@ func (c *userServiceClient) GetUserById(ctx context.Context, in *GetUserRequest,
 	return out, nil
 }
 
-func (c *userServiceClient) AuthenticateRequest(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*TokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(TokenResponse)
-	err := c.cc.Invoke(ctx, UserService_AuthenticateRequest_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
 type UserServiceServer interface {
 	GetUserById(context.Context, *GetUserRequest) (*UserResponse, error)
-	AuthenticateRequest(context.Context, *TokenRequest) (*TokenResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -77,9 +65,6 @@ type UnimplementedUserServiceServer struct{}
 
 func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetUserRequest) (*UserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserById not implemented")
-}
-func (UnimplementedUserServiceServer) AuthenticateRequest(context.Context, *TokenRequest) (*TokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method AuthenticateRequest not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -120,24 +105,6 @@ func _UserService_GetUserById_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_AuthenticateRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).AuthenticateRequest(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_AuthenticateRequest_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).AuthenticateRequest(ctx, req.(*TokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -148,10 +115,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserById",
 			Handler:    _UserService_GetUserById_Handler,
-		},
-		{
-			MethodName: "AuthenticateRequest",
-			Handler:    _UserService_AuthenticateRequest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
