@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/cfex/microservices-in-go/services/common/genproto;genproto";
+option go_package = "github.com/cfex/microservices-in-go/services/common/pb;pb";
 
 
 service UserService { 

@@ -40,3 +40,16 @@ func (h *handler) CreateProject(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 }
+
+func (h *handler) GetAllProjects(c *gin.Context) {
+	log := logger.GetLogger()
+
+	resp, err := h.svc.GetAll(c)
+	if err != nil {
+		log.Error().Err(err).Msg(err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}

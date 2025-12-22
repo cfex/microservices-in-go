@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"net/http"
 
 	"github.com/cfex/microservices-in-go/services/projects-service/cmd/config"
 	"github.com/cfex/microservices-in-go/services/projects-service/internal/clients"
@@ -33,9 +32,7 @@ func (r *router) NewRouter() *gin.Engine {
 	svc := services.NewProjectService(r.uc, pr)
 	hndl := handlers.NewHandled(svc, r.cfg)
 
-	prg.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"m": "hello"})
-	}).POST("/", hndl.CreateProject)
+	prg.GET("/", hndl.GetAllProjects).POST("/", hndl.CreateProject)
 
 	return ro
 }
