@@ -31,8 +31,8 @@ func (cr *RegisterRequest) ToEntity(password string) *models.User {
 	return &models.User{
 		Username: cr.Username,
 		Email:    cr.Email,
-		Role:     "user",
 		Password: password,
+		Role:     "user",
 	}
 }
 

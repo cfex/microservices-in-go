@@ -1,4 +1,18 @@
 services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - microservices
   postgres:
     image: postgres:15
     environment:
@@ -10,6 +24,8 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - microservices
   user-service:
     build:
       context: ./users-service
@@ -18,8 +34,6 @@ services:
     command: ["air", "-c", ".air.toml"]
     volumes:
       - ./users-service:/app
-    ports:
-      - "5001:5000"
     environment:
       - DB_USER=postgres
       - DB_PASSWORD=admin
@@ -29,5 +43,50 @@ services:
     depends_on:
       - postgres
     restart: on-failure
+    networks:
+      - microservices
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.users.rule=PathPrefix(`/api/users`) || PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.users.entrypoints=web"
+      - "traefik.http.routers.users.middlewares=rate-limit@docker"
+      - "traefik.http.services.users.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
+      - "traefik.http.middlewares.rate-limit.ratelimit.burst=20"
+      - "traefik.http.middlewares.rate-limit.ratelimit.period=60s"
+      - "traefik.http.middlewares.rate-limit.ratelimit.sourcecriterion=ipstrategy.depth=0"
+  projects-service:
+    build:
+      context: ./projects-service
+      dockerfile: Dockerfile
+      target: dev
+    command: ["air", "-c", ".air.toml"]
+    volumes:
+      - ./projects-service:/app
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=admin
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=hubdb
+    depends_on:
+      - postgres
+      - user-service
+    restart: on-failure
+    networks:
+      - microservices
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.projects.rule=PathPrefix(`/api/projects`)"
+      - "traefik.http.routers.projects.entrypoints=web"
+      - "traefik.http.routers.projects.middlewares=rate-limit-projects@docker"
+      - "traefik.http.services.projects.loadbalancer.server.port=5100"
+      - "traefik.http.middlewares.rate-limit-projects.ratelimit.average=5"
+      - "traefik.http.middlewares.rate-limit-projects.ratelimit.burst=100"
+      - "traefik.http.middlewares.rate-limit-projects.ratelimit.period=60s"
+      - "traefik.http.middlewares.rate-limit-projects.ratelimit.sourcecriterion=ipstrategy.depth=0"
 volumes:
   postgres-data:
+networks:
+  microservices:
+    driver: bridge
