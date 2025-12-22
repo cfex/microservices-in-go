@@ -37,7 +37,7 @@ func (s *service) GetAll(ctx context.Context) ([]*dtos.ProjectResponse, error) {
 	if err != nil {
 		return nil, errors.New("internal server error")
 	}
-	resp := make([]*dtos.ProjectResponse, len(res))
+	resp := make([]*dtos.ProjectResponse, 0, len(res))
 
 	for _, r := range res {
 		proj := &dtos.ProjectResponse{
