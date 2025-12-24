@@ -1,0 +1,5 @@
+[build]
+cmd = "go build -o ./tmp/users-service ."
+entrypoint = "./tmp/users-service"
+include = ["."]
+exclude_dir = ["tmp","vendor"]

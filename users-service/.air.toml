@@ -1,5 +1,0 @@
-[build]
-cmd = "go build -o ./tmp/users-service ."
-bin = "./tmp/users-service"
-include = ["."]
-exclude_dir = ["tmp","vendor"]
