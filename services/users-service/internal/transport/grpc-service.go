@@ -15,7 +15,6 @@ type GrpcService interface {
 
 type grpcSvc struct {
 	repo *repositories.User
-	pb.UnimplementedUserServiceServer
 }
 
 func NewUsrGrpcSvc(repo *repositories.User) GrpcService {
