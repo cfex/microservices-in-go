@@ -4,7 +4,10 @@ go 1.25.5
 
 require github.com/gin-contrib/cors v1.7.6
 
-require github.com/mattn/go-colorable v0.1.13 // indirect
+require (
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.13.3 // indirect
