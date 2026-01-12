@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 
+	"github.com/cfex/microservices-in-go/services/common/amqp"
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/handlers"
 	repositories "github.com/cfex/microservices-in-go/services/users-service/internal/repositories"
@@ -12,12 +13,13 @@ import (
 )
 
 type router struct {
-	DB  *sql.DB
-	cfg *config.Config
+	DB       *sql.DB
+	cfg      *config.Config
+	producer *amqp.Producer
 }
 
-func CreateRouter(db *sql.DB, cfg *config.Config) *router {
-	return &router{DB: db, cfg: cfg}
+func CreateRouter(db *sql.DB, cfg *config.Config, producer *amqp.Producer) *router {
+	return &router{DB: db, cfg: cfg, producer: producer}
 }
 
 func (r *router) NewRouter() *gin.Engine {
@@ -27,7 +29,7 @@ func (r *router) NewRouter() *gin.Engine {
 	ur := repositories.NewUserRepository(r.DB)
 	as := services.NewAuthService(ur)
 	us := services.NewUserService(ur)
-	ah := handlers.NewAuthHandler(as, r.cfg)
+	ah := handlers.NewAuthHandler(as, r.cfg, r.producer)
 	uh := handlers.NewUserHandler(us)
 
 	prg := ro.Group("/api")

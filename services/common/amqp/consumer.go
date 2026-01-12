@@ -10,10 +10,10 @@ import (
 )
 
 type Consumer struct {
-	conn *Connection
+	conn *AmqpClient
 }
 
-func NewConsumer(conn *Connection) *Consumer {
+func NewConsumer(conn *AmqpClient) *Consumer {
 	return &Consumer{conn: conn}
 }
 

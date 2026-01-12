@@ -10,15 +10,15 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-type Publsher struct {
-	conn *Connection
+type Producer struct {
+	conn *AmqpClient
 }
 
-func NewPublisher(conn *Connection) *Publsher {
-	return &Publsher{conn: conn}
+func NewProducer(conn *AmqpClient) *Producer {
+	return &Producer{conn: conn}
 }
 
-func (p *Publsher) DeclareExchange(exchangeName, exchangeType string) error {
+func (p *Producer) DeclareExchange(exchangeName, exchangeType string) error {
 	err := p.conn.ch.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
 
 	if err != nil {
@@ -29,7 +29,7 @@ func (p *Publsher) DeclareExchange(exchangeName, exchangeType string) error {
 	return nil
 }
 
-func (p *Publsher) Publish(ctx context.Context, exchange, routingKey string, message any) error {
+func (p *Producer) Publish(ctx context.Context, exchange, routingKey string, message any) error {
 	body, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %w", err)

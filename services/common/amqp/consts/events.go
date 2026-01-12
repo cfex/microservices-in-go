@@ -1,7 +1,7 @@
 package amqp
 
 const (
-	EmailWelcom = "email.welcome"
+	EmailWelcome = "email.welcome"
 )
 
 const (
@@ -12,3 +12,8 @@ const (
 	ProjectCreated = "project.created"
 	ProjectUpdated = "project.updated"
 )
+
+type NotificationEvent struct {
+	Type any
+	Body any
+}

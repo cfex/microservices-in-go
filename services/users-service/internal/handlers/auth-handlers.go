@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/cfex/microservices-in-go/services/common/amqp"
+	amqpConsts "github.com/cfex/microservices-in-go/services/common/amqp/consts"
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/logger"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/models/dtos"
@@ -12,12 +16,13 @@ import (
 )
 
 type AuthHandler struct {
-	service services.AuthService
-	cfg     *config.Config
+	service  services.AuthService
+	cfg      *config.Config
+	producer *amqp.Producer
 }
 
-func NewAuthHandler(service services.AuthService, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{service: service, cfg: cfg}
+func NewAuthHandler(service services.AuthService, cfg *config.Config, producer *amqp.Producer) *AuthHandler {
+	return &AuthHandler{service: service, cfg: cfg, producer: producer}
 }
 
 func (h *AuthHandler) RegisterUser(c *gin.Context) {
@@ -37,6 +42,19 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		c.AbortWithStatusJSON(err.Code, gin.H{"error": err.Message})
 		return
 	}
+
+	ctx, cancel := context.WithTimeout(c, 5*time.Second)
+	defer cancel()
+
+	event := map[string]any{
+		"type":      "email.welcome",
+		"to":        usr.Email,
+		"subject":   "Welcome to Platform!",
+		"username":  usr.Username,
+		"timestamp": time.Now(),
+	}
+
+	h.producer.Publish(ctx, amqpConsts.EmailExchange, "email.welcome", event)
 
 	c.JSON(201, usr)
 }
