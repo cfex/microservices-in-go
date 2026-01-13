@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
+	"github.com/cfex/microservices-in-go/services/common"
 	"github.com/cfex/microservices-in-go/services/notification-service/config"
 	"github.com/cfex/microservices-in-go/services/notification-service/internal/services"
 )
@@ -17,18 +19,29 @@ func NewEmailHandler(srv services.EmailSenderService, cfg *config.Config) *Email
 	return &EmailHandler{srv: srv, cfg: cfg}
 }
 
-func (h *EmailHandler) SendEmail(to, subject string) {
-	h.srv.SendEmail(to, subject, "")
+func (h *EmailHandler) SendEmail(to, subject, body string) {
+	h.srv.SendEmail(to, subject, body)
 }
 
 func (h *EmailHandler) HandleMessage(body []byte) error {
-	var event any
+	var event *common.Event
 
 	if err := json.Unmarshal(body, &event); err != nil {
 		return fmt.Errorf("failed to unmarshal json: %w", err)
 	}
 
-	fmt.Print(event)
+	switch event.Type {
+	case "email.welcome":
+		var data common.WelcomeData
+		if err := json.Unmarshal(event.Data, &data); err != nil {
+			return fmt.Errorf("failed to unmarshal welcome data: %w", err)
+		}
+
+		h.SendEmail(data.To, data.Subject, data.Username)
+	default:
+		log.Printf("Unknown event type: %s", event.Type)
+		return nil
+	}
 
 	return nil
 }

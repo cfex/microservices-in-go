@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/cfex/microservices-in-go/services/common"
 	"github.com/cfex/microservices-in-go/services/common/amqp"
 	amqpConsts "github.com/cfex/microservices-in-go/services/common/amqp/consts"
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
@@ -46,15 +48,25 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c, 5*time.Second)
 	defer cancel()
 
-	event := map[string]any{
-		"type":      "email.welcome",
-		"to":        usr.Email,
-		"subject":   "Welcome to Platform!",
-		"username":  usr.Username,
-		"timestamp": time.Now(),
+	welcomeData := common.WelcomeData{
+		To:       usr.Email,
+		Subject:  "Welcome to Platform!",
+		Username: usr.Username,
 	}
 
-	h.producer.Publish(ctx, amqpConsts.EmailExchange, "email.welcome", event)
+	marshaled, marshalErr := json.Marshal(welcomeData)
+	if marshalErr != nil {
+		log.Error().Err(marshalErr).Msg("failed to marshal welcome data")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	event := common.Event{
+		Type: "email.welcome",
+		Data: marshaled,
+	}
+
+	h.producer.Publish(ctx, amqpConsts.EmailExchange, event.Type, event)
 
 	c.JSON(201, usr)
 }
