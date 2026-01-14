@@ -1,0 +1,5 @@
+[build]
+cmd = "go build -o ./tmp/notification-service ."
+entrypoint = "./tmp/notification-service"
+include = ["."]
+exclude_dir = ["tmp","vendor"]

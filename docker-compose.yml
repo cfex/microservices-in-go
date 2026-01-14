@@ -1,6 +1,32 @@
-version: "3.8"
-
 services:
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - microservices
+    restart: unless-stopped
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq.conf
+    volumes:
+      - ./rabbitmq-definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - microservices
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   traefik:
     image: traefik:v2.10
     container_name: traefik
@@ -41,6 +67,29 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  notification-service:
+    build:
+      context: .
+      dockerfile: ./services/notification-service/Dockerfile
+      target: dev
+    container_name: notification-service
+    command: ["air", "-c", ".air.toml"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    working_dir: /app/services/notification-service
+    env_file:
+      - ./services/notification-service/.env
+    ports:
+      - "5200:5200"
+    volumes:
+      - ./services/notification-service:/app/services/notification-service
+      - ./:/app/
+      - /app/services/notification-service/tmp
+    networks:
+      - microservices
+    restart: unless-stopped
+
   user-service:
     build:
       context: .
@@ -56,15 +105,11 @@ services:
       - ./services/users-service:/app/services/users-service
       - ./:/app/
       - /app/services/users-service/tmp # Exclude tmp folder from sync
-    environment:
-      DB_USER: postgres
-      DB_PASSWORD: admin
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: hubdb
-      HTTP_PORT: :5000
-      GRPC_PORT: :50051
+    env_file:
+      - ./services/users-service/.env
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
     networks:
@@ -95,15 +140,11 @@ services:
       - ./services/projects-service:/app/services/projects-service
       - ./:/app/
       - /app/services/projects-service/tmp # Exclude tmp folder from sync
-    environment:
-      DB_USER: postgres
-      DB_PASSWORD: admin
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: hubdb
-      HTTP_PORT: :5100
-      USERS_GRPC_ADDR: user-service:50051 # Docker service name + gRPC port
+    env_file:
+      - ./services/projects-service/.env
     depends_on:
+      rabbitmq:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       user-service:

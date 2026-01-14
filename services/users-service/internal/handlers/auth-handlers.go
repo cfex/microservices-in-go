@@ -1,9 +1,15 @@
 package handlers
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/cfex/microservices-in-go/services/common"
+	"github.com/cfex/microservices-in-go/services/common/amqp"
+	amqpConsts "github.com/cfex/microservices-in-go/services/common/amqp/consts"
 	"github.com/cfex/microservices-in-go/services/users-service/cmd/config"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/logger"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/models/dtos"
@@ -12,12 +18,13 @@ import (
 )
 
 type AuthHandler struct {
-	service services.AuthService
-	cfg     *config.Config
+	service  services.AuthService
+	cfg      *config.Config
+	producer *amqp.Producer
 }
 
-func NewAuthHandler(service services.AuthService, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{service: service, cfg: cfg}
+func NewAuthHandler(service services.AuthService, cfg *config.Config, producer *amqp.Producer) *AuthHandler {
+	return &AuthHandler{service: service, cfg: cfg, producer: producer}
 }
 
 func (h *AuthHandler) RegisterUser(c *gin.Context) {
@@ -37,6 +44,29 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		c.AbortWithStatusJSON(err.Code, gin.H{"error": err.Message})
 		return
 	}
+
+	ctx, cancel := context.WithTimeout(c, 5*time.Second)
+	defer cancel()
+
+	welcomeData := common.WelcomeData{
+		To:       usr.Email,
+		Subject:  "Welcome to Platform!",
+		Username: usr.Username,
+	}
+
+	marshaled, marshalErr := json.Marshal(welcomeData)
+	if marshalErr != nil {
+		log.Error().Err(marshalErr).Msg("failed to marshal welcome data")
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	event := common.Event{
+		Type: "email.welcome",
+		Data: marshaled,
+	}
+
+	h.producer.Publish(ctx, amqpConsts.EmailExchange, event.Type, event)
 
 	c.JSON(201, usr)
 }

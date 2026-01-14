@@ -70,7 +70,7 @@ func Load() (*Config, error) {
 				MaxAge:           12 * time.Hour,
 			},
 			Domain:      env.GetEnv("DOMAIN"),
-			UsrGrpcPort: env.GetEnv("USERS_GRPC_ADDR"),
+			UsrGrpcPort: env.GetEnv("USER_GRPC_ADDR"),
 		},
 	}, nil
 }
