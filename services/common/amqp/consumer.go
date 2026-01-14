@@ -80,7 +80,7 @@ func (c *Consumer) handleMessage(msg amqp091.Delivery, handler MessageHandler) {
 
 		nackErr := msg.Nack(
 			false,
-			false,
+			true,
 		)
 
 		if nackErr != nil {

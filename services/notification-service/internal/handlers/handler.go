@@ -37,11 +37,13 @@ func (h *EmailHandler) HandleMessage(body []byte) error {
 			return fmt.Errorf("failed to unmarshal welcome data: %w", err)
 		}
 
-		h.SendEmail(data.To, data.Subject, data.Username)
+		if err := h.srv.SendEmail(data.To, data.Subject, data.Username); err != nil {
+			return fmt.Errorf("send email failed: %w", err)
+		}
+
+		return nil
 	default:
 		log.Printf("Unknown event type: %s", event.Type)
 		return nil
 	}
-
-	return nil
 }
