@@ -2,15 +2,18 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 
-	"github.com/cfex/microservices-in-go/services/users-service/internal/models"
+	apperrors "github.com/cfex/microservices-in-go/services/common/errors"
 	"github.com/cfex/microservices-in-go/services/users-service/internal/models/dtos"
 	repositories "github.com/cfex/microservices-in-go/services/users-service/internal/repositories"
 )
 
 type UserService interface {
-	GetByID(ctx context.Context, id string) (*dtos.AccountResponse, *models.ErrorResponse)
-	GetAllUsers(ctx context.Context) ([]*dtos.AccountResponse, *models.ErrorResponse)
+	GetByID(ctx context.Context, id string) (*dtos.AccountResponse, error)
+	GetAllUsers(ctx context.Context) ([]*dtos.AccountResponse, error)
 }
 
 type userSvc struct {
@@ -21,28 +24,23 @@ func NewUserService(repo *repositories.User) UserService {
 	return &userSvc{repo: repo}
 }
 
-func (s *userSvc) GetByID(ctx context.Context, id string) (*dtos.AccountResponse, *models.ErrorResponse) {
+func (s *userSvc) GetByID(ctx context.Context, id string) (*dtos.AccountResponse, error) {
 	usr, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, &models.ErrorResponse{
-			Code:    500,
-			Message: "Failed to retrieve user",
-			Err:     err,
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apperrors.ErrUserNotFound
 		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	accountDto := &dtos.AccountResponse{}
 	return accountDto.FromEntity(usr), nil
 }
 
-func (s *userSvc) GetAllUsers(ctx context.Context) ([]*dtos.AccountResponse, *models.ErrorResponse) {
+func (s *userSvc) GetAllUsers(ctx context.Context) ([]*dtos.AccountResponse, error) {
 	users, err := s.repo.GetAll(ctx)
 	if err != nil {
-		return nil, &models.ErrorResponse{
-			Code:    500,
-			Message: "Failed to retrieve users",
-			Err:     err,
-		}
+		return nil, fmt.Errorf("failed to get all users: %w", err)
 	}
 
 	resp := make([]*dtos.AccountResponse, 0, len(users))

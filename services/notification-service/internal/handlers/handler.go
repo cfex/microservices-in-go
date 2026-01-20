@@ -3,20 +3,21 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/cfex/microservices-in-go/services/common"
 	"github.com/cfex/microservices-in-go/services/notification-service/config"
 	"github.com/cfex/microservices-in-go/services/notification-service/internal/services"
+	"github.com/rs/zerolog"
 )
 
 type EmailHandler struct {
 	srv services.EmailSenderService
 	cfg *config.Config
+	log *zerolog.Logger
 }
 
-func NewEmailHandler(srv services.EmailSenderService, cfg *config.Config) *EmailHandler {
-	return &EmailHandler{srv: srv, cfg: cfg}
+func NewEmailHandler(srv services.EmailSenderService, cfg *config.Config, log *zerolog.Logger) *EmailHandler {
+	return &EmailHandler{srv: srv, cfg: cfg, log: log}
 }
 
 func (h *EmailHandler) SendEmail(to, subject, body string) {
@@ -43,7 +44,7 @@ func (h *EmailHandler) HandleMessage(body []byte) error {
 
 		return nil
 	default:
-		log.Printf("Unknown event type: %s", event.Type)
+		h.log.Printf("Unknown event type: %s", event.Type)
 		return nil
 	}
 }

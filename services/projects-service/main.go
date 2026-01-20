@@ -17,6 +17,10 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
+	err = cfg.Validate()
+	if err != nil {
+		log.Fatal().Err(err).Msg(err.Error())
+	}
 
 	dbConn := database.ConnectDB(*cfg)
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,44 +13,59 @@ import (
 	"github.com/cfex/microservices-in-go/services/notification-service/config"
 	"github.com/cfex/microservices-in-go/services/notification-service/internal/handlers"
 	"github.com/cfex/microservices-in-go/services/notification-service/internal/services"
+	"github.com/cfex/microservices-in-go/services/notification-service/logger"
 )
 
 func main() {
-	cfg := config.InitConfig()
+	log := logger.GetLogger()
 
-	amqpConfig := amqpConfig.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load configuration")
+	}
+
+	err = cfg.Validate()
+	if err != nil {
+		log.Fatal().Err(err).Msg("configuration validation failed")
+	}
+
+	amqpConfig, err := amqpConfig.Load()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load amqp configuration")
+	}
+
 	conn, err := amqp.ConnectAmqp(amqpConfig)
 	if err != nil {
-		log.Fatalf("failed to connect to amqp: %v", err)
+		log.Fatal().Err(err).Msg("failed to connect to amqp")
 	}
 	defer conn.Close()
 
 	client, err := amqp.NewClient(conn)
 	if err != nil {
-		log.Fatalf("failed to create a client: %v", err)
+		log.Fatal().Err(err).Msg("failed to create amqp client")
 	}
 
 	consumer := amqp.NewConsumer(client)
 	if err != nil {
-		log.Fatalf("failed to declare queue: %v", err)
+		log.Fatal().Err(err).Msg("failed to create amqp consumer")
 	}
 
 	s := services.NewSender(cfg)
-	h := handlers.NewEmailHandler(*s, cfg)
+	h := handlers.NewEmailHandler(*s, cfg, &log)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	err = consumer.Consume(ctx, amqpConsts.EmailQueue, "notification-worker", h.HandleMessage)
 	if err != nil {
-		log.Fatal("failed to start consumer: %w", err)
+		log.Fatal().Err(err).Msg("failed to start consuming messages")
 	}
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	sig := <-sigChan
-	log.Printf("Received signal: %v, shutting down gracefully...", sig)
+	log.Info().Msgf("Received signal %s, shutting down...", sig)
 
 	cancel()
 
@@ -60,14 +74,14 @@ func main() {
 
 	select {
 	case <-shutdownCtx.Done():
-		log.Println("Shutdown timeout exceeded, force closing")
+		log.Info().Msg("Shutdown timed out, forcing exit")
 	case <-time.After(2 * time.Second):
-		log.Println("Consumer shutdown complete")
+		log.Info().Msg("Shutdown complete")
 	}
 
 	if err := conn.Close(); err != nil {
-		log.Printf("Error closing connection: %v", err)
+		log.Error().Err(err).Msg("Failed to close AMQP connection")
 	}
 
-	log.Println("Notification service stopped")
+	log.Info().Str("signal", sig.String()).Msg("Received signal, shutting down")
 }

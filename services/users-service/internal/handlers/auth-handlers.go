@@ -40,8 +40,8 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	usr, err := h.service.Register(c.Request.Context(), &req)
 
 	if err != nil {
-		log.Error().Msg(err.Message)
-		c.AbortWithStatusJSON(err.Code, gin.H{"error": err.Message})
+		log.Error().Err(err).Msg(err.Error())
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -83,8 +83,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	res, err := h.service.Login(c, &req)
 
 	if err != nil {
-		log.Error().Msg(err.Message)
-		c.AbortWithStatusJSON(err.Code, gin.H{"error": err.Message})
+		log.Error().Err(err).Msg(err.Error())
+		c.Error(err)
 		return
 	}
 
@@ -111,14 +111,14 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 
 	userId, ok := userIdValue.(string)
 	if !ok {
-		log.Error().Msg("Invalid user id type")
+		log.Error().Msg("Invalid user id")
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user id"})
 		return
 	}
 
 	res, err := h.service.Me(c, userId)
 	if err != nil {
-		log.Error().Msg("Unauthorized")
+		log.Error().Err(err).Msg(err.Error())
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}

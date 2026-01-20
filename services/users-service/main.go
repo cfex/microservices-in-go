@@ -27,6 +27,11 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
+	err = cfg.Validate()
+	if err != nil {
+		log.Fatal().Err(err).Msg(err.Error())
+	}
+
 	dbConn := database.ConnectDB(*cfg)
 	defer func() {
 		if err := dbConn.Close(); err != nil {
@@ -34,13 +39,17 @@ func main() {
 		}
 	}()
 
-	amqpConfig := amqpConfig.Load()
+	amqpConfig, err := amqpConfig.Load()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to load amqp configuration")
+	}
+
 	conn, err := amqp.ConnectAmqp(amqpConfig)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to amqp")
 	}
-
 	defer conn.Close()
+
 	client, err := amqp.NewClient(conn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create a client")

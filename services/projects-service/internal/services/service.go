@@ -36,7 +36,7 @@ func (s *service) GetById(ctx context.Context, projectID string) (*dtos.ProjectR
 
 	proj, err := s.repo.GetById(ctx, projectID)
 	if err != nil {
-		return nil, errors.New("Not found")
+		return nil, ProjectNotFound
 	}
 
 	return resp.FromEntity(proj), nil

@@ -22,8 +22,8 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 
 	usr, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		log.Error().Msg(err.Message)
-		c.JSON(err.Code, gin.H{"error": err.Message})
+		log.Error().Err(err).Msg(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -35,8 +35,8 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 
 	rep, err := h.service.GetAllUsers(c)
 	if err != nil {
-		log.Error().Err(err.Err).Msg(err.Message)
-		c.JSON(err.Code, gin.H{"error": err.Message})
+		log.Error().Err(err).Msg(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
